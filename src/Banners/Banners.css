@@ -31,3 +31,13 @@
 .banner_container {
   display: inline-block;
 }
+.banner_display {
+  color: rgb(76, 99, 119);
+  background-color: aliceblue
+}
+.banner_content {
+  padding: 20px;
+  border-color: rgb(217, 231, 243);
+  border-style: solid;
+  border-width: 1px;
+}
