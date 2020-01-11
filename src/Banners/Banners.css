@@ -41,3 +41,10 @@
   border-style: solid;
   border-width: 1px;
 }
+.banner_header {
+  text-align: center;
+}
+.banner_listButtons {
+  margin-bottom: 20px !important;
+
+}

@@ -1,26 +1,46 @@
 import { Spinner } from '@fms/salesmgmt-layout';
 import axios from 'axios';
-import moment from 'moment';
 import { parse } from 'query-string';
 import React, { useEffect, useState } from 'react';
-import { Segment, Button, Input, Grid, TextArea, Form } from 'semantic-ui-react';
 import './Banners.css';
-import BannersDatePicker from './BannersDatePicker';
+import BannersForm from './BannersForm';
+import BannersDisplay from './BannersDisplay';
+import { initBanner, Banner, initState, State } from '../components/types';
+import { Button } from 'semantic-ui-react';
+import BannersTable from './tables/BannersTable';
 
-const Banners = ({ location }: any) => {
-  const [state, setState] = useState({
-    loading: true,
-    error: false,
-    message: ''
-  });
+const Banners = ({ history, location }: any) => {
+  const { pathname, search } = location;
+  const [state, setState] = useState<State>(initState);
+  const [data, setData] = useState<Banner>(initBanner);
+  const newMode = pathname === '/ui/banner/new'
+  const listMode = pathname === '/ui/banner/list'
+  const { id } = parse(search);
+  const { date } = parse(search);
 
-  const [data, setData] = useState();
-  const { id } = parse(location.search);
-  const { date } = parse(location.search);
+
+  useEffect(() => {
+    setState(initState)
+    if (pathname !== '/ui/banner/new') {
+      fetchBanners()
+      return;
+    }
+    setData(initBanner)
+    setState({ ...state, loading: false });
+  }, [location, history]); // eslint-disable-line
+
+  const determinePath = (): string => {
+    if (pathname === '/ui/banner/list') {
+      return 'list'
+    }
+    if(date) return `?date=${date}`
+    if(id) return id.toString()
+    return '';
+  }
 
   const fetchBanners = () => {
     return axios
-      .get(`http://localhost:5000/api/banner/${id ? id : ''}`)
+      .get(`http://localhost:5000/api/banner/${determinePath()}`)
       .then(response => {
         if (response.data.length < 1) {
           return setState({ ...state, loading: false, message: 'No Banners' });
@@ -34,9 +54,6 @@ const Banners = ({ location }: any) => {
       });
   };
 
-  useEffect(() => {
-    fetchBanners();
-  }, []); // eslint-disable-line
 
   const renderMessage = (error: boolean, message: string) => {
     return (
@@ -48,155 +65,98 @@ const Banners = ({ location }: any) => {
       </div>
     );
   };
+
   const onFormValueChange = (e: any, props: any) => {
     const tempData = data;
     tempData[props.name] = props.value;
     setData(tempData)
   }
 
-  const handlePost = () => {
-    const postData = {...data, id: null}
+  const handleSubmit = () => {
+    if (newMode) {
+      const postData = {...data, id: null}
+      return axios
+      .post('http://localhost:5000/api/banner/', postData)
+      .then(() => {
+        history.push('/ui/banner/list')
+      })
+      .catch((err: any) => {
+        console.error(err)
+      });
+    } else {
+      return axios
+      .put(`http://localhost:5000/api/banner/${data.id}`, data)
+      .then(() => {
+        history.push(`/ui/banner?id=${data.bannerId}`)
+      })
+      .catch((err: any) => {
+        console.error(err)
+      });
+    }
+  }
+
+  const handleDelete = (deleteId: number) => { 
     return axios
-    .post('http://localhost:5000/api/banner/', postData)
+    .delete(`http://localhost:5000/api/banner/${deleteId ? deleteId : ''}`)
     .then(response => {
-      console.log(response)
-      window.location.reload()
+      setData(initBanner)
+      history.push('/ui/banner/list')
     })
     .catch((err: any) => {
-      console.log(err)
+      console.error(err)
     });
   }
-  const handlePut = () => {
-    return axios
-    .put(`http://localhost:5000/api/banner/${id ? id : data.id}`, data)
-    .then(response => {
-      console.log(response)
-      window.location.reload()
-    })
-    .catch((err: any) => {
-      console.log(err)
-    });
-  }
-  const handleDelete = () => { 
-    return axios
-    .delete(`http://localhost:5000/api/banner/${id ? id : ''}`)
-    .then(response => {
-      console.log(response)
-      window.location.reload()
-    })
-    .catch((err: any) => {
-      console.log(err)
-    });
+  const renderData = () => {
+    return !data.length ? (
+      <BannersDisplay banner={data} handleDelete={handleDelete}listMode={listMode}/> 
+    ) : (
+    data
+      .sort((a: Banner, b: Banner) => (a.bannerId || 0) - (b.bannerId || 0))
+      .map((b:any, k: number) => <BannersDisplay key={k} handleDelete={handleDelete} banner={b} listMode={listMode} />)
+    )
   }
   return (
-    <div className='banner_container'>
+    <>
+      <h3 className='banner_header'>Banners</h3>
       {state.loading ? <Spinner /> : <></>}
       {state.error || state.message ? (
         renderMessage(state.error, state.message)
       ) : (
         <></>
       )}
-      {data && data.id ? (
+      <Button.Group className='banner_listButtons' floated='right' size='tiny' >
+        <Button onClick={() => history.push('/ui/banner/list')} content='List View' />
+        <Button onClick={() => history.push('/ui/banner/new')} primary={true} content='+ New Banner' />
+      </Button.Group>
+      <div className='banner_container'>
+      {data ? (
         <>
-        <Segment>
-          <Form>
-            <Grid>
-              <Grid.Row>
-                <Grid.Column>
-                <h4>Banner:</h4>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>ID:</h4>
-                </Grid.Column>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <div>{data.id}</div>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>Banner ID:</h4>
-                </Grid.Column>
-                <Grid.Column width={3} >
-                  <Input name='bannerId' type='number' fluid={true} onChange={onFormValueChange} defaultValue={data.bannerId} />
-                </Grid.Column>
-
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>Start Date:</h4>
-                </Grid.Column>
-                <Grid.Column width={3}>
-                  <BannersDatePicker selectedDate={data.startDate} onChange={(e) => onFormValueChange(e, { name: 'startDate', value: e})}/>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>End Date:</h4>
-                </Grid.Column>
-                <Grid.Column width={3}>
-                <BannersDatePicker selectedDate={data.endDate} onChange={(e) => onFormValueChange(e, { name: 'endDate', value: e})}/>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>Display:</h4>
-                </Grid.Column>
-                <Grid.Column width={3}>
-                    <Input type='checkbox' name='display' onChange={onFormValueChange} defaultValue={data.display} />
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2}>
-                  <h4>Content:</h4>
-                </Grid.Column>
-                <Grid.Column width={10}>
-                    <TextArea name='content' defaultValue={data.content} onChange={onFormValueChange} />
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column>
-                  <Button.Group floated='left'>
-                    <Button content='POST' onClick={handlePost}/>
-                    <Button content='PUT' onClick={handlePut}/>
-                    <Button content='DELETE' onClick={handleDelete}/>
-                  </Button.Group>
-                </Grid.Column>
-              </Grid.Row>
-            </Grid>
-          </Form>
-        </Segment>
-        <Segment>
-            <Grid className='banner_display'>
-              <Grid.Row>
-                <Grid.Column verticalAlign='middle' textAlign='center'>
-                  <h4>Banner (ID:{data.bannerId})</h4>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2} verticalAlign='middle'>
-                  <h4>Period:</h4>
-                </Grid.Column>
-                <Grid.Column width={8} verticalAlign='middle'>
-                 <p>{moment(data.startDate).format('YYYY年MM月DD日(dd)')} ~ {moment(data.endDate).format('YYYY年MM月DD日(dd)')}</p>
-                </Grid.Column>
-              </Grid.Row>
-              <Grid.Row>
-                <Grid.Column width={2}>
-                  <h4>Content:</h4>
-                </Grid.Column>
-                <Grid.Column className='banner_content' width={8}>
-                  <div dangerouslySetInnerHTML={{ __html: data.content }}/>
-                </Grid.Column>
-              </Grid.Row>
-            </Grid>
-        </Segment>
+        {data.id ? (
+          <BannersForm 
+            banner={data} 
+            handleSubmit={handleSubmit}
+            onFormValueChange={onFormValueChange}
+          />
+          ) : (
+            <></>
+          )}
+          {newMode ? (
+          <BannersForm 
+            banner={initBanner} 
+            handleSubmit={handleSubmit}
+            onFormValueChange={onFormValueChange}
+          />
+          ) : (
+            <></>
+          )}
+          {listMode && data.length ? <BannersTable banners={data} /> : <></>}
+          {!newMode && !listMode ? renderData() : <></>}
         </>
-      ) : (
+        ) : (
         <></>
       )}
     </div>
+    </>
   );
 };
 

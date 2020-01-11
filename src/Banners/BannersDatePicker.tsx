@@ -3,6 +3,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const BannersDatePicker: FC<{ selectedDate: Date, onChange: (e: any) => void }> = ({ selectedDate, onChange }) => {
+  console.log(selectedDate)
   const [date, setDate] = useState(selectedDate)
   const onChangeHandler = (value: Date) => {
     setDate(value)
