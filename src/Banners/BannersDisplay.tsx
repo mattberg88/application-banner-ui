@@ -1,7 +1,7 @@
 import moment from 'moment';
 import React, { FC } from 'react';
 import { Route } from 'react-router-dom'
-import { Segment, Grid, Button } from 'semantic-ui-react';
+import { Button, Grid, Segment } from 'semantic-ui-react';
 import { Banner } from '../components/types';
 
 const BannersDisplay: FC<{ banner: Banner, handleDelete: any, listMode: boolean }> = ({ banner, handleDelete, listMode }) => {
@@ -38,7 +38,7 @@ const BannersDisplay: FC<{ banner: Banner, handleDelete: any, listMode: boolean 
                 <Button onClick={() => handleDelete(banner.id)} content='Delete' />
                 {listMode ? (
                   <Route render={({ history }: any) => (
-                    <Button onClick={() => handleClick(history)} primary={true} content='Edit' />
+                    <Button onClick={() => handleClick(history)} color='vk' content='Edit' />
                   )} />
                 ) : (
                   <></>

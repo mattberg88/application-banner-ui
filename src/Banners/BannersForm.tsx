@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Segment, Button, Input, Grid, TextArea, Form } from 'semantic-ui-react';
+import { Button, Form, Grid, Input, Segment, TextArea } from 'semantic-ui-react';
 import BannersDatePicker from './BannersDatePicker';
 
 const BannersForm: FC<{ 
@@ -63,7 +63,7 @@ const BannersForm: FC<{
           <Grid.Row>
             <Grid.Column>
               <Button.Group floated='right' size='tiny'>
-                <Button primary={true} content='Submit' onClick={handleSubmit}/>
+                <Button color='vk' content='Submit' onClick={handleSubmit}/>
               </Button.Group>
             </Grid.Column>
           </Grid.Row>

@@ -2,11 +2,11 @@ import { Spinner } from '@fms/salesmgmt-layout';
 import axios from 'axios';
 import { parse } from 'query-string';
 import React, { useEffect, useState } from 'react';
-import './Banners.css';
-import BannersForm from './BannersForm';
-import BannersDisplay from './BannersDisplay';
-import { initBanner, Banner, initState, State } from '../components/types';
 import { Button } from 'semantic-ui-react';
+import { Banner, initBanner, initState, State } from '../components/types';
+import './Banners.css';
+import BannersDisplay from './BannersDisplay';
+import BannersForm from './BannersForm';
 import BannersTable from './tables/BannersTable';
 
 const Banners = ({ history, location }: any) => {
@@ -83,16 +83,15 @@ const Banners = ({ history, location }: any) => {
       .catch((err: any) => {
         console.error(err)
       });
-    } else {
-      return axios
-      .put(`http://localhost:5000/api/banner/${data.id}`, data)
-      .then(() => {
-        history.push(`/ui/banner?id=${data.bannerId}`)
-      })
-      .catch((err: any) => {
-        console.error(err)
-      });
-    }
+    } 
+    return axios
+    .put(`http://localhost:5000/api/banner/${data.id}`, data)
+    .then(() => {
+      history.push(`/ui/banner?id=${data.bannerId}`)
+    })
+    .catch((err: any) => {
+      console.error(err)
+    });
   }
 
   const handleDelete = (deleteId: number) => { 
@@ -124,9 +123,9 @@ const Banners = ({ history, location }: any) => {
       ) : (
         <></>
       )}
-      <Button.Group className='banner_listButtons' floated='right' size='tiny' >
+      <Button.Group className='banner_listButtons' floated='left' size='tiny' >
         <Button onClick={() => history.push('/ui/banner/list')} content='List View' />
-        <Button onClick={() => history.push('/ui/banner/new')} primary={true} content='+ New Banner' />
+        <Button onClick={() => history.push('/ui/banner/new')} color='vk' content='+ New Banner' />
       </Button.Group>
       <div className='banner_container'>
       {data ? (

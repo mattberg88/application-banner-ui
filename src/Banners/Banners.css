@@ -29,7 +29,7 @@
 }
 
 .banner_container {
-  display: inline-block;
+  display: block;
 }
 .banner_display {
   color: rgb(76, 99, 119);
