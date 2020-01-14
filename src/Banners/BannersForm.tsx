@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   Button,
   Form,
@@ -8,12 +9,12 @@ import {
   TextArea
 } from 'semantic-ui-react';
 import BannersDatePicker from './BannersDatePicker';
-
 const BannersForm: FC<{
   banner: any;
   handleSubmit: any;
   onFormValueChange: any;
 }> = ({ banner, handleSubmit, onFormValueChange }) => {
+  const history = useHistory();
   return (
     <Segment clearing={true}>
       <Form>
@@ -91,6 +92,10 @@ const BannersForm: FC<{
           <Grid.Row>
             <Grid.Column>
               <Button.Group floated='right' size='tiny'>
+                <Button
+                  content='Cancel'
+                  onClick={() => history.push('/ui/banner/list')}
+                />
                 <Button color='vk' content='Submit' onClick={handleSubmit} />
               </Button.Group>
             </Grid.Column>

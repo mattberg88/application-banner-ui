@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from 'semantic-ui-react';
 import { Banner, initBanner, initState, State } from '../components/types';
 import './Banners.css';
+import BannersConfirmationModal from './BannersConfirmationModal';
 import BannersDisplay from './BannersDisplay';
 import BannersForm from './BannersForm';
 import BannersTable from './tables/BannersTable';
@@ -13,6 +14,8 @@ const Banners = ({ history, location }: any) => {
   const { pathname, search } = location;
   const [state, setState] = useState<State>(initState);
   const [data, setData] = useState<Banner>(initBanner);
+  const [modalState, setModalState] = useState<boolean>(false);
+  const [targetBanner, setTargetBanner] = useState<number>();
   const newMode = pathname === '/ui/banner/new';
   const listMode = pathname === '/ui/banner/list';
   const { id } = parse(search);
@@ -128,8 +131,12 @@ const Banners = ({ history, location }: any) => {
   };
 
   const handleDelete = (deleteId: number) => {
+    setTargetBanner(deleteId);
+    if (!modalState) return setModalState(true);
     return axios
-      .delete(`http://localhost:5000/api/banner/${deleteId ? deleteId : ''}`)
+      .delete(
+        `http://localhost:5000/api/banner/${deleteId ? deleteId : targetBanner}`
+      )
       .then(response => {
         setData(initBanner);
         setState({
@@ -137,6 +144,7 @@ const Banners = ({ history, location }: any) => {
           message: `Banner ID:${deleteId} Deleted`,
           messageType: 'positive'
         });
+        setModalState(false);
         history.push('/ui/banner/list');
       })
       .catch((err: any) => {
@@ -145,6 +153,7 @@ const Banners = ({ history, location }: any) => {
           message: err.message,
           messageType: 'error'
         });
+        setModalState(false);
       });
   };
   const renderData = () => {
@@ -182,13 +191,24 @@ const Banners = ({ history, location }: any) => {
       ) : (
         <></>
       )}
+      <BannersConfirmationModal
+        deleteId={targetBanner || 0}
+        modalState={modalState}
+        onClose={() => setModalState(false)}
+        onConfirm={handleDelete}
+      />
       <div className='banner_listButtons'>
         <Button.Group floated='right' size='mini'>
-          <Button onClick={() => toLink('list')} content='List View' />
+          <Button
+            icon='list'
+            onClick={() => toLink('list')}
+            content='List View'
+          />
           <Button
             onClick={() => toLink('new')}
             color='vk'
-            content='+ New Banner'
+            icon='plus'
+            content='New Banner'
           />
         </Button.Group>
       </div>

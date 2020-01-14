@@ -1,7 +1,7 @@
 import moment from 'moment';
 import React, { FC } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Button, Table } from 'semantic-ui-react';
+import { Button, Icon, Table } from 'semantic-ui-react';
 import { Banner } from '../../components/types';
 
 const BannersTableRow: FC<{
@@ -19,11 +19,16 @@ const BannersTableRow: FC<{
       <Table.Cell>
         <Button.Group size='tiny'>
           <Button
+            icon='edit'
             onClick={() => history.push(`/ui/banner?id=${banner.bannerId}`)}
             color='vk'
             content='Edit'
           />
-          <Button onClick={() => onDeleteBanner(banner.id)} content='Delete' />
+          <Button
+            icon='trash'
+            onClick={() => onDeleteBanner(banner.id)}
+            content='Delete'
+          />
         </Button.Group>
       </Table.Cell>
     </Table.Row>
