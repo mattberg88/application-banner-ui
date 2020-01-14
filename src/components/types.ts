@@ -5,26 +5,26 @@ export interface Banner {
   endDate: Date | string;
   content: string;
   display: boolean;
-  [index : string]: any
+  [index: string]: any;
 }
 
 export const initBanner: Banner = {
-  id: null,
   bannerId: null,
-  startDate: new Date(),
-  endDate: new Date(),
   content: '',
-  display: true
-}
+  display: true,
+  endDate: new Date(),
+  id: null,
+  startDate: new Date()
+};
 
 export interface State {
   loading: boolean;
-  error: boolean;
+  messageType: string;
   message: string;
 }
 
 export const initState: State = {
-    loading: true,
-    error: false,
-    message: ''
-}
+  loading: true,
+  message: '',
+  messageType: ''
+};

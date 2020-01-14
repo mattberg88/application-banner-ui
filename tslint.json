@@ -15,6 +15,7 @@
         "jsxSingleQuote": true
       }
     ],
+    "jsx-no-lambda": false,
     "import-name": false,
     "variable-name": false,
     "no-console": false,

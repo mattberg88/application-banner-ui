@@ -13,51 +13,57 @@ const Banners = ({ history, location }: any) => {
   const { pathname, search } = location;
   const [state, setState] = useState<State>(initState);
   const [data, setData] = useState<Banner>(initBanner);
-  const newMode = pathname === '/ui/banner/new'
-  const listMode = pathname === '/ui/banner/list'
+  const newMode = pathname === '/ui/banner/new';
+  const listMode = pathname === '/ui/banner/list';
   const { id } = parse(search);
   const { date } = parse(search);
 
-
   useEffect(() => {
-    setState(initState)
+    setState({ ...state, loading: true });
     if (pathname !== '/ui/banner/new') {
-      fetchBanners()
+      fetchBanners();
       return;
     }
-    setData(initBanner)
+    setData(initBanner);
     setState({ ...state, loading: false });
   }, [location, history]); // eslint-disable-line
 
   const determinePath = (): string => {
     if (pathname === '/ui/banner/list') {
-      return 'list'
+      return 'list';
     }
-    if(date) return `?date=${date}`
-    if(id) return id.toString()
+    if (date) return `?date=${date}`;
+    if (id) return id.toString();
     return '';
-  }
+  };
 
   const fetchBanners = () => {
     return axios
       .get(`http://localhost:5000/api/banner/${determinePath()}`)
       .then(response => {
         if (response.data.length < 1) {
-          return setState({ ...state, loading: false, message: 'No Banners' });
+          return setState({
+            ...state,
+            loading: false,
+            message: 'No Banners',
+            messageType: 'warning'
+          });
         }
-        console.log(response.data)
         setState({ ...state, loading: false });
         return setData(response.data);
       })
       .catch((err: any) => {
-        setState({ loading: false, error: true, message: err.message });
+        setState({
+          loading: false,
+          message: err.message,
+          messageType: 'error'
+        });
       });
   };
 
-
-  const renderMessage = (error: boolean, message: string) => {
+  const renderMessage = (type: string, message: string) => {
     return (
-      <div className={`ui ${error ? 'error' : 'warning'} message`}>
+      <div className={`ui ${type} message`}>
         <div className='header'>
           <i className='exclamation triangle icon' />
           {message || 'unknown error'}
@@ -69,92 +75,155 @@ const Banners = ({ history, location }: any) => {
   const onFormValueChange = (e: any, props: any) => {
     const tempData = data;
     tempData[props.name] = props.value;
-    setData(tempData)
-  }
+    setData(tempData);
+  };
 
   const handleSubmit = () => {
     if (newMode) {
-      const postData = {...data, id: null}
+      const postData = { ...data, id: null };
+      if (!data.bannerId) {
+        return setState({
+          loading: false,
+          message: 'Banner ID required',
+          messageType: 'error'
+        });
+      }
       return axios
-      .post('http://localhost:5000/api/banner/', postData)
+        .post('http://localhost:5000/api/banner/', postData)
+        .then(() => {
+          setState({
+            ...initState,
+            loading: false,
+            message: `Banner ID: ${postData.bannerId} created`,
+            messageType: 'positive'
+          });
+          history.push('/ui/banner/list');
+        })
+        .catch((err: any) => {
+          setState({
+            loading: false,
+            message: err.message,
+            messageType: 'error'
+          });
+        });
+    }
+    return axios
+      .put(`http://localhost:5000/api/banner/${data.id}`, data)
       .then(() => {
-        history.push('/ui/banner/list')
+        setState({
+          ...initState,
+          loading: false,
+          message: `Banner ID: ${data.bannerId} updated`,
+          messageType: 'positive'
+        });
+        history.push(`/ui/banner/list`);
       })
       .catch((err: any) => {
-        console.error(err)
+        setState({
+          loading: false,
+          message: err.message,
+          messageType: 'error'
+        });
       });
-    } 
-    return axios
-    .put(`http://localhost:5000/api/banner/${data.id}`, data)
-    .then(() => {
-      history.push(`/ui/banner?id=${data.bannerId}`)
-    })
-    .catch((err: any) => {
-      console.error(err)
-    });
-  }
+  };
 
-  const handleDelete = (deleteId: number) => { 
+  const handleDelete = (deleteId: number) => {
     return axios
-    .delete(`http://localhost:5000/api/banner/${deleteId ? deleteId : ''}`)
-    .then(response => {
-      setData(initBanner)
-      history.push('/ui/banner/list')
-    })
-    .catch((err: any) => {
-      console.error(err)
-    });
-  }
+      .delete(`http://localhost:5000/api/banner/${deleteId ? deleteId : ''}`)
+      .then(response => {
+        setData(initBanner);
+        setState({
+          loading: false,
+          message: `Banner ID:${deleteId} Deleted`,
+          messageType: 'positive'
+        });
+        history.push('/ui/banner/list');
+      })
+      .catch((err: any) => {
+        setState({
+          loading: false,
+          message: err.message,
+          messageType: 'error'
+        });
+      });
+  };
   const renderData = () => {
     return !data.length ? (
-      <BannersDisplay banner={data} handleDelete={handleDelete}listMode={listMode}/> 
+      <BannersDisplay
+        banner={data}
+        handleDelete={handleDelete}
+        listMode={listMode}
+      />
     ) : (
-    data
-      .sort((a: Banner, b: Banner) => (a.bannerId || 0) - (b.bannerId || 0))
-      .map((b:any, k: number) => <BannersDisplay key={k} handleDelete={handleDelete} banner={b} listMode={listMode} />)
-    )
-  }
+      data
+        .sort((a: Banner, b: Banner) => (a.bannerId || 0) - (b.bannerId || 0))
+        .map((b: any, k: number) => (
+          <BannersDisplay
+            key={k}
+            handleDelete={handleDelete}
+            banner={b}
+            listMode={listMode}
+          />
+        ))
+    );
+  };
+
+  const toLink = (link: string) => {
+    setState({ ...initState, loading: false });
+    return history.push(`/ui/banner/${link}`);
+  };
+
   return (
     <>
-      <h3 className='banner_header'>Banners</h3>
-      {state.loading ? <Spinner /> : <></>}
-      {state.error || state.message ? (
-        renderMessage(state.error, state.message)
+      <h2 className='banner_header'>Banners</h2>
+      {state.loading ? <Spinner className='banner_spinner' /> : <></>}
+      {state.messageType || state.message ? (
+        renderMessage(state.messageType, state.message)
       ) : (
         <></>
       )}
-      <Button.Group className='banner_listButtons' floated='left' size='tiny' >
-        <Button onClick={() => history.push('/ui/banner/list')} content='List View' />
-        <Button onClick={() => history.push('/ui/banner/new')} color='vk' content='+ New Banner' />
-      </Button.Group>
+      <div className='banner_listButtons'>
+        <Button.Group floated='right' size='mini'>
+          <Button onClick={() => toLink('list')} content='List View' />
+          <Button
+            onClick={() => toLink('new')}
+            color='vk'
+            content='+ New Banner'
+          />
+        </Button.Group>
+      </div>
       <div className='banner_container'>
-      {data ? (
-        <>
-        {data.id ? (
-          <BannersForm 
-            banner={data} 
-            handleSubmit={handleSubmit}
-            onFormValueChange={onFormValueChange}
-          />
-          ) : (
-            <></>
-          )}
-          {newMode ? (
-          <BannersForm 
-            banner={initBanner} 
-            handleSubmit={handleSubmit}
-            onFormValueChange={onFormValueChange}
-          />
-          ) : (
-            <></>
-          )}
-          {listMode && data.length ? <BannersTable banners={data} /> : <></>}
-          {!newMode && !listMode ? renderData() : <></>}
-        </>
+        {data ? (
+          <>
+            {data.id ? (
+              <BannersForm
+                banner={data}
+                handleSubmit={handleSubmit}
+                onFormValueChange={onFormValueChange}
+              />
+            ) : (
+              <></>
+            )}
+            {newMode ? (
+              <BannersForm
+                banner={initBanner}
+                handleSubmit={handleSubmit}
+                onFormValueChange={onFormValueChange}
+              />
+            ) : (
+              <></>
+            )}
+            {listMode && data.length ? (
+              <BannersTable onDeleteBanner={handleDelete} banners={data} />
+            ) : (
+              <></>
+            )}
+            {!newMode && !listMode ? renderData() : <></>}
+          </>
         ) : (
-        <></>
-      )}
-    </div>
+          <></>
+        )}
+      </div>
     </>
   );
 };
